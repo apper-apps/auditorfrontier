@@ -4,24 +4,35 @@ import { toast } from "react-toastify";
 import ApperIcon from "@/components/ApperIcon";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
-const ResultsDashboard = ({ results }) => {
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  
-  if (!results) return null;
 
-  const handleEmailSubmit = async (email) => {
-    // Simulate API call to send email
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Here you would typically make an API call to your backend
-    // to send the PDF report to the provided email address
-    console.log('Sending PDF report to:', email)
-    
-    // For demo purposes, we're just simulating success
-// In a real implementation, you might want to handle errors appropriately
-  };
+// Utility functions moved outside component to prevent redeclaration
+const getScoreColor = (score) => {
+  if (score >= 80) return 'text-success-600';
+  if (score >= 60) return 'text-warning-600';
+  return 'text-error-600';
+};
 
-const EmailModal = ({ isOpen, onClose, onSubmit }) => {
+const getScoreBackground = (score) => {
+  if (score >= 80) return 'from-success-600 to-success-500';
+  if (score >= 60) return 'from-warning-600 to-warning-500';
+  return 'from-error-600 to-error-500';
+};
+
+const getRiskClassificationColor = (classification) => {
+  switch (classification.toLowerCase()) {
+    case 'minimal':
+      return 'bg-success-100 text-success-800 border-success-200';
+    case 'limited':
+      return 'bg-info-100 text-info-800 border-info-200';
+    case 'high':
+      return 'bg-warning-100 text-warning-800 border-warning-200';
+    case 'prohibited':
+      return 'bg-error-100 text-error-800 border-error-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
+
 const EmailModal = ({ isOpen, onClose, onSubmit }) => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,7 +42,8 @@ const EmailModal = ({ isOpen, onClose, onSubmit }) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
-const handleSubmit = async (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!email.trim()) {
@@ -39,14 +51,14 @@ const handleSubmit = async (e) => {
       return;
     }
 
-if (!validateEmail(email)) {
+    if (!validateEmail(email)) {
       setError('Please enter a valid email address');
       return;
     }
 
     setError('');
     setIsSubmitting(true);
-try {
+    try {
       await onSubmit(email);
       toast.success('Report will be sent to your email shortly!');
       onClose();
@@ -58,7 +70,7 @@ try {
     }
   };
 
-const handleClose = useCallback(() => {
+  const handleClose = useCallback(() => {
     if (!isSubmitting) {
       onClose();
       setEmail('');
@@ -66,13 +78,13 @@ const handleClose = useCallback(() => {
     }
   }, [isSubmitting, onClose]);
 
-const handleBackdropClick = (e) => {
+  const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
       handleClose();
     }
   };
 
-const handleKeyDown = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Escape') {
       handleClose();
     }
@@ -151,37 +163,25 @@ const handleKeyDown = (e) => {
           </div>
         </form>
       </motion.div>
-</div>
+    </div>
   );
 };
 
-  const getScoreColor = (score) => {
-const getScoreColor = (score) => {
-    if (score >= 80) return 'text-success-600';
-    if (score >= 60) return 'text-warning-600';
-    return 'text-error-600';
-  };
+const ResultsDashboard = ({ results }) => {
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  
+  if (!results) return null;
 
-const getScoreBackground = (score) => {
-    if (score >= 80) return 'from-success-600 to-success-500';
-    if (score >= 60) return 'from-warning-600 to-warning-500';
-    return 'from-error-600 to-error-500';
-  };
-
-const getRiskClassificationColor = (classification) => {
-    switch (classification.toLowerCase()) {
-      case 'minimal':
-        return 'bg-success-100 text-success-800 border-success-200';
-      case 'limited':
-        return 'bg-info-100 text-info-800 border-info-200';
-      case 'high':
-case 'high':
-        return 'bg-warning-100 text-warning-800 border-warning-200';
-      case 'prohibited':
-        return 'bg-error-100 text-error-800 border-error-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const handleEmailSubmit = async (email) => {
+    // Simulate API call to send email
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    // Here you would typically make an API call to your backend
+    // to send the PDF report to the provided email address
+    console.log('Sending PDF report to:', email)
+    
+    // For demo purposes, we're just simulating success
+    // In a real implementation, you might want to handle errors appropriately
   };
 
   return (
@@ -273,7 +273,7 @@ case 'high':
           <p className="text-gray-600 text-sm mb-4">
             Get a summary of your assessment results
           </p>
-<Button 
+          <Button 
             variant="secondary" 
             className="w-full"
             onClick={() => setIsEmailModalOpen(true)}
@@ -303,7 +303,7 @@ case 'high':
         <p className="text-gray-500 text-sm mt-1">
           Report generated by AIactAuditor.eu
         </p>
-</div>
+      </div>
 
       <EmailModal
         isOpen={isEmailModalOpen}
