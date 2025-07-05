@@ -167,9 +167,224 @@ const EmailModal = ({ isOpen, onClose, onSubmit }) => {
   );
 };
 
+const PremiumReportModal = ({ isOpen, onClose }) => {
+  const [selectedTier, setSelectedTier] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+
+  const pricingTiers = [
+    {
+      id: 'basic-premium',
+      name: 'Essential Report',
+      price: 497,
+      features: [
+        'Detailed compliance analysis',
+        'Implementation roadmap',
+        'Risk assessment matrix',
+        'Regulatory requirements checklist',
+        'Basic remediation guidance'
+      ],
+      description: 'Perfect for small to medium businesses starting their AI compliance journey'
+    },
+    {
+      id: 'professional',
+      name: 'Professional Report',
+      price: 997,
+      features: [
+        'Everything in Essential Report',
+        'Custom compliance framework',
+        'Industry-specific recommendations',
+        'Gap analysis with priorities',
+        'Implementation timeline',
+        'Stakeholder communication templates'
+      ],
+      description: 'Ideal for established businesses with complex AI implementations',
+      popular: true
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise Report',
+      price: 1997,
+      features: [
+        'Everything in Professional Report',
+        'Executive summary for leadership',
+        'Multi-jurisdiction compliance',
+        'Advanced risk modeling',
+        'Integration with existing systems',
+        'Ongoing compliance monitoring plan',
+        '30-day implementation support'
+      ],
+      description: 'Comprehensive solution for large organizations and enterprises'
+    }
+  ];
+
+  const handleClose = useCallback(() => {
+    if (!isProcessing) {
+      onClose();
+      setSelectedTier(null);
+      setPaymentError('');
+    }
+  }, [isProcessing, onClose]);
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      handleClose();
+    }
+  };
+
+  const handlePurchase = async (tier) => {
+    setIsProcessing(true);
+    setPaymentError('');
+    
+    try {
+      // Simulate Stripe payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // In a real implementation, you would:
+      // 1. Create a payment intent with Stripe
+      // 2. Handle the payment confirmation
+      // 3. Process the successful payment
+      // 4. Generate and deliver the premium report
+      
+      // For demo purposes, we'll simulate success
+      toast.success(`Premium report purchased successfully! You'll receive your ${tier.name} via email within 24 hours.`);
+      handleClose();
+    } catch (error) {
+      setPaymentError('Payment failed. Please try again.');
+      toast.error('Payment processing failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={handleBackdropClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={-1}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Premium Compliance Reports</h2>
+              <p className="text-gray-600 mt-1">Choose the perfect report for your compliance needs</p>
+            </div>
+            <button
+              onClick={handleClose}
+              disabled={isProcessing}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2"
+            >
+              <ApperIcon name="X" size={24} />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {pricingTiers.map((tier) => (
+              <div
+                key={tier.id}
+                className={`relative card p-6 ${
+                  tier.popular ? 'border-2 border-accent-400 shadow-lg' : ''
+                }`}
+              >
+                {tier.popular && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-accent-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+                
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{tier.name}</h3>
+                  <div className="text-3xl font-bold text-accent-600 mb-1">
+                    €{tier.price.toLocaleString()}
+                  </div>
+                  <p className="text-gray-600 text-sm">{tier.description}</p>
+                </div>
+
+                <ul className="space-y-3 mb-6">
+                  {tier.features.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <ApperIcon name="CheckCircle" className="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  variant={tier.popular ? "accent" : "secondary"}
+                  className="w-full"
+                  onClick={() => handlePurchase(tier)}
+                  loading={isProcessing}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Processing...' : `Get ${tier.name}`}
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {paymentError && (
+            <div className="mt-6 p-4 bg-error-50 border border-error-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <ApperIcon name="AlertCircle" className="w-5 h-5 text-error-600" />
+                <p className="text-error-800 text-sm">{paymentError}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <ApperIcon name="Shield" className="w-6 h-6 text-success-600" />
+              <h4 className="text-lg font-semibold text-gray-900">Secure Payment Processing</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <ApperIcon name="Lock" className="w-4 h-4 text-success-600" />
+                <span>SSL encrypted payments</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ApperIcon name="CreditCard" className="w-4 h-4 text-success-600" />
+                <span>Powered by Stripe</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ApperIcon name="CheckCircle" className="w-4 h-4 text-success-600" />
+                <span>PCI DSS compliant</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ApperIcon name="Mail" className="w-4 h-4 text-success-600" />
+                <span>Report delivered within 24 hours</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const ResultsDashboard = ({ results }) => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   if (!results) return null;
 
   const handleEmailSubmit = async (email) => {
@@ -289,7 +504,11 @@ const ResultsDashboard = ({ results }) => {
             Detailed compliance roadmap with implementation guidance
           </p>
           <div className="text-2xl font-bold text-accent-600 mb-2">€497 - €1,997</div>
-          <Button variant="accent" className="w-full">
+<Button 
+            variant="accent" 
+            className="w-full"
+            onClick={() => setIsPremiumModalOpen(true)}
+          >
             Get Premium Report
           </Button>
         </div>
@@ -305,10 +524,15 @@ const ResultsDashboard = ({ results }) => {
         </p>
       </div>
 
-      <EmailModal
+<EmailModal
         isOpen={isEmailModalOpen}
         onClose={() => setIsEmailModalOpen(false)}
         onSubmit={handleEmailSubmit}
+      />
+      
+      <PremiumReportModal
+        isOpen={isPremiumModalOpen}
+        onClose={() => setIsPremiumModalOpen(false)}
       />
     </motion.div>
   );
