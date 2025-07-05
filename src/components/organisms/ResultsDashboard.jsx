@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import ApperIcon from "@/components/ApperIcon";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
+import Error from "@/components/ui/Error";
+import Loading from "@/components/ui/Loading";
 
 // Utility functions moved outside component to prevent redeclaration
 const getScoreColor = (score) => {
@@ -381,10 +383,126 @@ const PremiumReportModal = ({ isOpen, onClose }) => {
     </div>
   );
 };
+const PDFPreviewModal = ({ isOpen, onClose, pdfData }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const handleClose = useCallback(() => {
+    onClose();
+    setIsLoading(true);
+    setError(null);
+  }, [onClose]);
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      handleClose();
+    }
+  };
+
+  const handleDownload = () => {
+    if (pdfData && pdfData.blob) {
+      const link = document.createElement('a');
+      link.href = pdfData.url;
+      link.download = `AI_Act_Compliance_Report_${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Report downloaded successfully!');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={handleBackdropClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={-1}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Report Preview</h2>
+            <p className="text-gray-600 mt-1">Review your compliance assessment report</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="secondary"
+              onClick={handleDownload}
+              disabled={!pdfData}
+              className="flex items-center gap-2"
+            >
+              <ApperIcon name="Download" size={16} />
+              Download
+            </Button>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2"
+            >
+              <ApperIcon name="X" size={24} />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 p-6">
+          {error ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <ApperIcon name="AlertCircle" className="w-12 h-12 text-error-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Preview Error</h3>
+                <p className="text-gray-600">{error}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="h-full bg-gray-50 rounded-lg overflow-hidden">
+              {isLoading && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading preview...</p>
+                  </div>
+                </div>
+              )}
+              
+              {pdfData && pdfData.url && (
+                <iframe
+                  src={pdfData.url}
+                  className="w-full h-full border-0 rounded-lg"
+                  title="PDF Preview"
+                  onLoad={() => setIsLoading(false)}
+                  onError={() => {
+                    setIsLoading(false);
+                    setError('Failed to load preview. Please try downloading the report instead.');
+                  }}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 const ResultsDashboard = ({ results }) => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
+  const [isPDFPreviewOpen, setIsPDFPreviewOpen] = useState(false);
+  
   if (!results) return null;
 
   const handleEmailSubmit = async (email) => {
@@ -399,7 +517,7 @@ const ResultsDashboard = ({ results }) => {
     // In a real implementation, you might want to handle errors appropriately
   };
 
-  return (
+return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -480,6 +598,36 @@ const ResultsDashboard = ({ results }) => {
         </div>
       </div>
 
+{/* PDF Preview Section */}
+      {results.pdfData && (
+        <div className="card p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-primary-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <ApperIcon name="Eye" className="w-8 h-8 text-primary-600" />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Report Preview</h3>
+                <p className="text-gray-600 text-sm">Review your generated compliance report</p>
+              </div>
+            </div>
+            <Button
+              variant="primary"
+              onClick={() => setIsPDFPreviewOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <ApperIcon name="FileText" size={16} />
+              Preview Report
+            </Button>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <span>Document: AI_Act_Compliance_Report.pdf</span>
+              <span>Generated: {new Date().toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="card p-6 text-center">
@@ -504,7 +652,7 @@ const ResultsDashboard = ({ results }) => {
             Detailed compliance roadmap with implementation guidance
           </p>
           <div className="text-2xl font-bold text-accent-600 mb-2">€497 - €1,997</div>
-<Button 
+          <Button 
             variant="accent" 
             className="w-full"
             onClick={() => setIsPremiumModalOpen(true)}
@@ -524,7 +672,13 @@ const ResultsDashboard = ({ results }) => {
         </p>
       </div>
 
-<EmailModal
+<PDFPreviewModal
+        isOpen={isPDFPreviewOpen}
+        onClose={() => setIsPDFPreviewOpen(false)}
+        pdfData={results.pdfData}
+      />
+
+      <EmailModal
         isOpen={isEmailModalOpen}
         onClose={() => setIsEmailModalOpen(false)}
         onSubmit={handleEmailSubmit}
