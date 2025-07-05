@@ -1,36 +1,188 @@
-import { motion } from 'framer-motion'
-import ApperIcon from '@/components/ApperIcon'
-import Button from '@/components/atoms/Button'
-
+import React, { useCallback, useState } from "react";
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
+import ApperIcon from "@/components/ApperIcon";
+import Button from "@/components/atoms/Button";
+import Input from "@/components/atoms/Input";
 const ResultsDashboard = ({ results }) => {
-  if (!results) return null
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  
+  if (!results) return null;
+
+  const handleEmailSubmit = async (email) => {
+    // Simulate API call to send email
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    // Here you would typically make an API call to your backend
+    // to send the PDF report to the provided email address
+    console.log('Sending PDF report to:', email)
+    
+    // For demo purposes, we're just simulating success
+// In a real implementation, you might want to handle errors appropriately
+  };
+
+const EmailModal = ({ isOpen, onClose, onSubmit }) => {
+const EmailModal = ({ isOpen, onClose, onSubmit }) => {
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      setError('Email address is required');
+      return;
+    }
+
+if (!validateEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    setError('');
+    setIsSubmitting(true);
+try {
+      await onSubmit(email);
+      toast.success('Report will be sent to your email shortly!');
+      onClose();
+      setEmail('');
+    } catch (error) {
+      toast.error('Failed to send report. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+const handleClose = useCallback(() => {
+    if (!isSubmitting) {
+      onClose();
+      setEmail('');
+      setError('');
+    }
+  }, [isSubmitting, onClose]);
+
+const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      handleClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={handleBackdropClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={-1}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.2 }}
+        className="bg-white rounded-xl shadow-xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Get Your Free Report</h3>
+          <button
+            onClick={handleClose}
+            disabled={isSubmitting}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <ApperIcon name="X" size={20} />
+          </button>
+        </div>
+
+        <p className="text-gray-600 text-sm mb-6">
+          Enter your email address and we'll send you a PDF copy of your compliance assessment report.
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="form-label">Email Address</label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                setError('')
+              }}
+              placeholder="your@email.com"
+              disabled={isSubmitting}
+              className={error ? 'border-error-300 focus:border-error-400 focus:ring-error-400' : ''}
+            />
+            {error && (
+              <p className="text-error-600 text-sm mt-1">{error}</p>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={handleClose}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              className="flex-1"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Sending...' : 'Send Report'}
+            </Button>
+          </div>
+        </form>
+      </motion.div>
+</div>
+  );
+};
 
   const getScoreColor = (score) => {
-    if (score >= 80) return 'text-success-600'
-    if (score >= 60) return 'text-warning-600'
-    return 'text-error-600'
-  }
+const getScoreColor = (score) => {
+    if (score >= 80) return 'text-success-600';
+    if (score >= 60) return 'text-warning-600';
+    return 'text-error-600';
+  };
 
-  const getScoreBackground = (score) => {
-    if (score >= 80) return 'from-success-600 to-success-500'
-    if (score >= 60) return 'from-warning-600 to-warning-500'
-    return 'from-error-600 to-error-500'
-  }
+const getScoreBackground = (score) => {
+    if (score >= 80) return 'from-success-600 to-success-500';
+    if (score >= 60) return 'from-warning-600 to-warning-500';
+    return 'from-error-600 to-error-500';
+  };
 
-  const getRiskClassificationColor = (classification) => {
+const getRiskClassificationColor = (classification) => {
     switch (classification.toLowerCase()) {
       case 'minimal':
-        return 'bg-success-100 text-success-800 border-success-200'
+        return 'bg-success-100 text-success-800 border-success-200';
       case 'limited':
-        return 'bg-info-100 text-info-800 border-info-200'
+        return 'bg-info-100 text-info-800 border-info-200';
       case 'high':
-        return 'bg-warning-100 text-warning-800 border-warning-200'
+case 'high':
+        return 'bg-warning-100 text-warning-800 border-warning-200';
       case 'prohibited':
-        return 'bg-error-100 text-error-800 border-error-200'
+        return 'bg-error-100 text-error-800 border-error-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  }
+  };
 
   return (
     <motion.div
@@ -121,7 +273,11 @@ const ResultsDashboard = ({ results }) => {
           <p className="text-gray-600 text-sm mb-4">
             Get a summary of your assessment results
           </p>
-          <Button variant="secondary" className="w-full">
+<Button 
+            variant="secondary" 
+            className="w-full"
+            onClick={() => setIsEmailModalOpen(true)}
+          >
             Download Free Report
           </Button>
         </div>
@@ -147,9 +303,15 @@ const ResultsDashboard = ({ results }) => {
         <p className="text-gray-500 text-sm mt-1">
           Report generated by AIactAuditor.eu
         </p>
-      </div>
-    </motion.div>
-  )
-}
+</div>
 
-export default ResultsDashboard
+      <EmailModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        onSubmit={handleEmailSubmit}
+      />
+    </motion.div>
+  );
+};
+
+export default ResultsDashboard;
