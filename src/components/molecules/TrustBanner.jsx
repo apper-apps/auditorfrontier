@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ApperIcon } from '@/components/ApperIcon'
-
+import ApperIcon from '@/components/ApperIcon'
 const TrustBanner = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0)
 
