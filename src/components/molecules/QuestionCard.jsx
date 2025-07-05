@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import ApperIcon from '@/components/ApperIcon'
 import Input from '@/components/atoms/Input'
@@ -16,6 +17,34 @@ const QuestionCard = ({
   onToggleHelp,
   className = '' 
 }) => {
+  const [showTooltip, setShowTooltip] = useState(false)
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
+  
+  const handleMouseEnter = (e) => {
+    if (question.articleRef) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      setTooltipPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top - 10
+      })
+      setShowTooltip(true)
+    }
+  }
+  
+  const handleMouseLeave = () => {
+    setShowTooltip(false)
+  }
+  
+  const getTooltipStyle = () => ({
+    position: 'fixed',
+    left: `${tooltipPosition.x}px`,
+    top: `${tooltipPosition.y}px`,
+    transform: 'translateX(-50%) translateY(-100%)',
+    zIndex: 1000,
+    maxWidth: '300px',
+    whiteSpace: 'nowrap',
+    pointerEvents: 'none'
+  })
   const renderInput = () => {
     const commonProps = {
       value: value || '',
@@ -86,10 +115,17 @@ const QuestionCard = ({
           <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
             {questionNumber}
           </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+<div className="flex-1">
+            <h3 
+              className="text-lg font-semibold text-gray-900 mb-2 cursor-help"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
               {question.title}
               {question.required && <span className="text-error-500 ml-1">*</span>}
+              {question.articleRef && (
+                <ApperIcon name="Info" className="w-4 h-4 text-primary-500 ml-2 inline-block" />
+              )}
             </h3>
             {question.description && (
               <p className="text-gray-600 mb-4">{question.description}</p>
@@ -128,10 +164,25 @@ const QuestionCard = ({
           </div>
         </motion.div>
       )}
-      
-      <div className="space-y-4">
+<div 
+        className="space-y-4 relative"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         {renderInput()}
       </div>
+      
+      {showTooltip && question.articleRef && (
+        <div 
+          className="tooltip opacity-100 transition-opacity duration-200"
+          style={getTooltipStyle()}
+        >
+          <div className="bg-gray-900 text-white px-3 py-2 rounded-lg shadow-lg text-sm">
+            <div className="font-semibold mb-1">EU AI Act Reference</div>
+            <div>{question.articleRef}</div>
+          </div>
+        </div>
+      )}
     </motion.div>
   )
 }
